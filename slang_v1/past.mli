@@ -47,7 +47,7 @@ type expr =
 
        | Lambda of loc * plambda 
        | App of loc * expr * expr 
-       | Let of loc * var * type_expr * expr * expr
+       | Let of loc * pattern * expr * expr
        | LetFun of loc * var * plambda * type_expr * expr
        | LetRecFun of loc * var * plambda * type_expr * expr
 

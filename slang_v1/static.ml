@@ -49,9 +49,10 @@ let make_ref loc (e, t)              = (Ref(loc, e), TEref t)
 let make_letfun loc f p (body, t2) (e, t)    = (LetFun(loc, f, (p, body), t2, e), t)
 let make_letrecfun loc f p (body, t2) (e, t) = (LetRecFun(loc, f, (p, body), t2, e), t)
 
-let make_let loc x t (e1, t1) (e2, t2)  = 
+let make_let loc p (e1, t1) (e2, t2)  =
+    let t = type_of_pattern p in
     if match_types (t, t1) 
-    then (Let(loc, x, t, e1, e2), t2)
+    then (Let(loc, p, e1, e2), t2)
     else report_types_not_equal loc t t1 
 
 let make_if loc (e1, t1) (e2, t2) (e3, t3) = 
@@ -175,7 +176,7 @@ let rec  infer env e =
       let t = type_of_pattern p in
         make_lambda loc p t (infer (vars @ env) e)
     | App(loc, e1, e2)        -> make_app loc (infer env e1) (infer env e2)
-    | Let(loc, x, t, e1, e2)  -> make_let loc x t (infer env e1) (infer ((x, t) :: env) e2) 
+    | Let(loc, p, e1, e2)  -> make_let loc p (infer env e1) (infer ((expand_pattern p) @ env) e2) 
     | LetFun(loc, f, (patt, body), t2, e) -> 
       let t1 = type_of_pattern patt in
       let env1 = (f, TEarrow(t1, t2)) :: env in 

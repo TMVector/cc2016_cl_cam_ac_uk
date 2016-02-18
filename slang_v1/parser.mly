@@ -79,7 +79,7 @@ expr:
 | INR texpr expr %prec UMINUS        { Past.Inr(get_loc(), $2, $3) }
 | FUN tlfunpattern ARROW expr END 
                                      { Past.Lambda(get_loc(), ($2, $4)) } 
-| LET IDENT COLON texpr EQUAL expr IN expr END           { Past.Let (get_loc(), $2, $4, $6, $8) }
+| LET valpattern EQUAL expr IN expr END           { Past.Let (get_loc(), $2, $4, $6) }
 | LET IDENT tlfunpattern COLON texpr EQUAL expr IN expr END 
                                      { Past.LetFun (get_loc(), $2, ($3, $7), $5, $9) }
 | CASE expr OF 
@@ -95,15 +95,15 @@ exprlist:
 tlfunpattern:
 | UNIT                      { Past.PUnit } /* Only allow unit as the top level pattern, not as a child */
 | pairpattern               { $1 }
-| LPAREN funpattern RPAREN  { $2 }
-funpattern:
+| LPAREN valpattern RPAREN  { $2 }
+valpattern:
 | varpattern                { $1 }
 | pairpattern               { $1 }
-| LPAREN funpattern RPAREN  { $2 }
+| LPAREN valpattern RPAREN  { $2 }
 varpattern:
 | IDENT COLON texpr                         { Past.PVar($1, $3) }
 pairpattern:
-| LPAREN funpattern COMMA funpattern RPAREN { Past.PPair($2, $4) }
+| LPAREN valpattern COMMA valpattern RPAREN { Past.PPair($2, $4) }
 
 
 texpr: 

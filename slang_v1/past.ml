@@ -51,7 +51,7 @@ type expr =
 
        | Lambda of loc * plambda 
        | App of loc * expr * expr
-       | Let of loc * var * type_expr * expr * expr
+       | Let of loc * pattern * expr * expr
        | LetFun of loc * var * plambda * type_expr * expr
        | LetRecFun of loc * var * plambda * type_expr * expr
 
@@ -80,7 +80,7 @@ let  loc_of_expr = function
     | While(loc, _, _)              -> loc 
     | Lambda(loc, _)                -> loc 
     | App(loc, _, _)                -> loc 
-    | Let(loc, _, _, _, _)          -> loc 
+    | Let(loc, _, _, _)          -> loc 
     | LetFun(loc, _, _, _, _)       -> loc 
     | LetRecFun(loc, _, _, _, _)    -> loc 
 
@@ -171,8 +171,8 @@ let rec pp_expr ppf = function
     | Lambda(_, (p, e)) -> 
          fprintf ppf "(fun %a : %a -> %a)" pp_pattern p pp_type (type_of_pattern p) pp_expr e
     | App(_, e1, e2)      -> fprintf ppf "%a %a" pp_expr e1 pp_expr e2
-    | Let(_, x, t, e1, e2) -> 
-         fprintf ppf "@[<2>let %a : %a = %a in %a end@]" fstring x pp_type t pp_expr e1 pp_expr e2
+    | Let(_, p, e1, e2) -> 
+         fprintf ppf "@[<2>let %a = %a in %a end@]" pp_pattern p pp_expr e1 pp_expr e2
     | LetFun(_, f, (p, e1), t2, e2)     -> 
          fprintf ppf "@[let %a(%a) : %a =@ %a @ in %a @ end@]" 
                      fstring f pp_pattern p pp_type t2 pp_expr e1 pp_expr e2
@@ -248,7 +248,7 @@ let rec string_of_expr = function
     | Assign(_, e1, e2)   -> mk_con "Assign" [string_of_expr e1; string_of_expr e2]
     | Lambda(_, (p, e)) -> mk_con "Lambda" [string_of_pattern p; string_of_expr e]
     | App(_, e1, e2)      -> mk_con "App" [string_of_expr e1; string_of_expr e2]
-    | Let(_, x, t, e1, e2) -> mk_con "Let" [x; string_of_type t; string_of_expr e1; string_of_expr e2]
+    | Let(_, p, e1, e2) -> mk_con "Let" [string_of_pattern p; string_of_expr e1; string_of_expr e2]
     | LetFun(_, f, (p, e1), t2, e2)      -> 
           mk_con "LetFun" [
              f; 
