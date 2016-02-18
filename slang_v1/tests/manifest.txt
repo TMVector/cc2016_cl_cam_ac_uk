@@ -43,3 +43,5 @@ ref1 101
 ref2 101
 ref3 101
 while 3
+lambda_pattern1 101
+lambda_pattern2 101
