@@ -1,6 +1,11 @@
 
 type var = string 
 
+type pattern =
+  | PUnit
+  | PVar of var
+  | PPair of pattern * pattern
+
 type oper = ADD | MUL | SUB | LT | AND | OR | EQB | EQI
 
 type unary_oper = NEG | NOT | READ 
@@ -26,12 +31,13 @@ type expr =
        | Deref of expr 
        | Assign of expr * expr 
 
-       | Lambda of lambda 
+       | Lambda of plambda 
        | App of expr * expr
        | LetFun of var * lambda * expr
        | LetRecFun of var * lambda * expr
 
 and lambda = Past.var * expr 
+and plambda = pattern * expr
 
 (* printing *) 
 val string_of_unary_oper : unary_oper -> string 
@@ -40,4 +46,5 @@ val string_of_uop : unary_oper -> string
 val string_of_bop : oper -> string 
 val print_expr : expr -> unit 
 val eprint_expr : expr -> unit
+val string_of_pattern : pattern -> string
 val string_of_expr : expr -> string 

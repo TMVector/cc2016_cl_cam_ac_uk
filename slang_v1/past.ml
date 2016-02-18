@@ -18,6 +18,11 @@ type type_expr =
 
 type formals = (var * type_expr) list
 
+type pattern =
+  | PUnit
+  | PVar of var * type_expr
+  | PPair of pattern * pattern
+
 type oper = ADD | MUL | SUB | LT | AND | OR | EQ | EQB | EQI
 
 type unary_oper = NEG | NOT 
@@ -44,13 +49,14 @@ type expr =
        | Deref of loc * expr 
        | Assign of loc * expr * expr
 
-       | Lambda of loc * lambda 
+       | Lambda of loc * plambda 
        | App of loc * expr * expr
        | Let of loc * var * type_expr * expr * expr
        | LetFun of loc * var * lambda * type_expr * expr
        | LetRecFun of loc * var * lambda * type_expr * expr
 
-and lambda = var * type_expr * expr 
+and lambda = var * type_expr * expr
+and plambda = pattern * expr
 
 let  loc_of_expr = function 
     | Unit loc                      -> loc 
@@ -83,6 +89,11 @@ let string_of_loc loc =
     "line " ^ (string_of_int (loc.Lexing.pos_lnum)) ^ ", " ^ 
     "position " ^ (string_of_int ((loc.Lexing.pos_cnum - loc.Lexing.pos_bol) + 1))
 
+let rec type_of_pattern = function
+  | PUnit         -> TEunit
+  | PVar(v, t)    -> t
+  | PPair(p1, p2) -> TEproduct(type_of_pattern p1, type_of_pattern p2)
+
 open Format
 
 (*
@@ -99,6 +110,11 @@ let rec pp_type = function
   | TEarrow(t1, t2)   -> "(" ^ (pp_type t1) ^ " -> " ^ (pp_type t2) ^ ")" 
   | TEproduct(t1, t2) -> "(" ^ (pp_type t1) ^ " * " ^ (pp_type t2) ^ ")"  
   | TEunion(t1, t2)   -> "(" ^ (pp_type t1) ^ " + " ^ (pp_type t2) ^ ")"  
+
+let rec pp_patt = function
+  | PUnit         -> "()"
+  | PVar(x, t)    -> "(" ^ x ^ " : " ^ (pp_type t) ^ ")"
+  | PPair(p1, p2) -> "(" ^ (pp_patt p1) ^ ", " ^ (pp_patt p2) ^ ")"
 
 let pp_uop = function 
   | NEG -> "-" 
@@ -123,6 +139,7 @@ let fstring ppf s = fprintf ppf "%s" s
 let pp_type ppf t = fstring ppf (pp_type t) 
 let pp_unary ppf op = fstring ppf (pp_uop op) 
 let pp_binary ppf op = fstring ppf (pp_bop op) 
+let pp_pattern ppf p = fstring ppf (pp_patt p)
 
 (* ignore locations *) 
 let rec pp_expr ppf = function 
@@ -151,8 +168,8 @@ let rec pp_expr ppf = function
     | Ref(_, e)           -> fprintf ppf "ref %a" pp_expr e
     | Deref(_, e)         -> fprintf ppf "!%a" pp_expr e
     | Assign(_, e1, e2)   -> fprintf ppf "(%a := %a)" pp_expr e1 pp_expr e2 
-    | Lambda(_, (x, t, e)) -> 
-         fprintf ppf "(fun %a : %a -> %a)" fstring x pp_type t  pp_expr e
+    | Lambda(_, (p, e)) -> 
+         fprintf ppf "(fun %a : %a -> %a)" pp_pattern p pp_type (type_of_pattern p) pp_expr e
     | App(_, e1, e2)      -> fprintf ppf "%a %a" pp_expr e1 pp_expr e2
     | Let(_, x, t, e1, e2) -> 
          fprintf ppf "@[<2>let %a : %a = %a in %a end@]" fstring x pp_type t pp_expr e1 pp_expr e2
@@ -205,6 +222,11 @@ let rec string_of_type = function
   | TEproduct(t1, t2) -> mk_con "TEproduct" [string_of_type t1; string_of_type t2] 
   | TEunion(t1, t2)   -> mk_con "TEunion" [string_of_type t1; string_of_type t2] 
 
+let rec string_of_pattern = function
+  | PUnit          -> "PUnit"
+  | PVar(x, t)    -> mk_con "PVar" [x; string_of_type t]
+  | PPair(p1, p2) -> mk_con "PPair" [string_of_pattern p1; string_of_pattern p2]
+
 let rec string_of_expr = function 
     | Unit _              -> "Unit" 
     | What _              -> "What" 
@@ -224,7 +246,7 @@ let rec string_of_expr = function
     | Ref(_, e)           -> mk_con "Ref" [string_of_expr e] 
     | Deref(_, e)         -> mk_con "Deref" [string_of_expr e] 
     | Assign(_, e1, e2)   -> mk_con "Assign" [string_of_expr e1; string_of_expr e2]
-    | Lambda(_, (x, t, e)) -> mk_con "Lambda" [x; string_of_type t; string_of_expr e]
+    | Lambda(_, (p, e)) -> mk_con "Lambda" [string_of_pattern p; string_of_expr e]
     | App(_, e1, e2)      -> mk_con "App" [string_of_expr e1; string_of_expr e2]
     | Let(_, x, t, e1, e2) -> mk_con "Let" [x; string_of_type t; string_of_expr e1; string_of_expr e2]
     | LetFun(_, f, (x, t1, e1), t2, e2)      -> 

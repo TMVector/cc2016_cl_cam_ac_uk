@@ -1,6 +1,11 @@
 
 type var = string 
 
+type pattern =
+  | PUnit
+  | PVar of var
+  | PPair of pattern * pattern
+
 type oper = ADD | MUL | SUB | LT | AND | OR | EQB | EQI
 
 type unary_oper = NEG | NOT | READ 
@@ -24,12 +29,13 @@ type expr =
        | Ref of expr 
        | Deref of expr 
        | Assign of expr * expr 
-       | Lambda of lambda 
+       | Lambda of plambda 
        | App of expr * expr
        | LetFun of var * lambda * expr
        | LetRecFun of var * lambda * expr
 
-and lambda = var * expr 
+and lambda = var * expr
+and plambda = pattern * expr
 
 
 open Format
@@ -39,6 +45,11 @@ open Format
    http://caml.inria.fr/resources/doc/guides/format.en.html
    http://caml.inria.fr/pub/docs/manual-ocaml/libref/Format.html
 *) 
+
+let rec pp_patt = function
+  | PUnit         -> "()"
+  | PVar(v)       -> v
+  | PPair(p1, p2) -> "(" ^ (pp_patt p1) ^ ", " ^ (pp_patt p2) ^ ")"
 
 let pp_uop = function 
   | NEG -> "-" 
@@ -62,6 +73,8 @@ let string_of_unary_oper = pp_uop
 
 let fstring ppf s = fprintf ppf "%s" s
 
+let pp_pattern ppf p = fstring ppf (pp_patt p)
+
 let pp_unary ppf t = fstring ppf (pp_uop t) 
 
 let pp_binary ppf t = fstring ppf (pp_bop t) 
@@ -83,8 +96,8 @@ let rec pp_expr ppf = function
     | Case(e, (x1, e1), (x2, e2)) -> 
         fprintf ppf "@[<2>case %a of@ | inl %a -> %a @ | inr %a -> %a end@]" 
                      pp_expr e fstring x1 pp_expr e1 fstring x2 pp_expr e2 
-    | Lambda(x, e) -> 
-         fprintf ppf "(fun %a -> %a)" fstring x pp_expr e
+    | Lambda(p, e) -> 
+         fprintf ppf "(fun %a -> %a)" pp_pattern p pp_expr e
     | App(e1, e2)      -> fprintf ppf "%a %a" pp_expr e1 pp_expr e2
 
     | Seq el           -> fprintf ppf "begin %a end" pp_expr_list el 
@@ -138,6 +151,11 @@ let mk_con con l =
       | s::rest -> aux (carry ^ s ^ ", ") rest 
     in aux (con ^ "(") l 
 
+let rec string_of_pattern = function
+  | PUnit         -> "PUnit"
+  | PVar(x)       -> mk_con "PVar" [x]
+  | PPair(p1, p2) -> mk_con "PPair" [string_of_pattern p1; string_of_pattern p2]
+
 let rec string_of_expr = function 
     | Unit             -> "Unit" 
     | Var x            -> mk_con "Var" [x] 
@@ -151,7 +169,7 @@ let rec string_of_expr = function
     | Snd e            -> mk_con "Snd" [string_of_expr e] 
     | Inl e            -> mk_con "Inl" [string_of_expr e] 
     | Inr e            -> mk_con "Inr" [string_of_expr e] 
-    | Lambda(x, e)     -> mk_con "Lambda" [x; string_of_expr e]
+    | Lambda(p, e)     -> mk_con "Lambda" [string_of_pattern p; string_of_expr e]
     | App(e1, e2)      -> mk_con "App" [string_of_expr e1; string_of_expr e2]
     | Seq el           -> mk_con "Seq" [string_of_expr_list el] 
     | While (e1, e2)   -> mk_con "While" [string_of_expr e1; string_of_expr e2]

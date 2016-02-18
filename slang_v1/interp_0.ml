@@ -65,6 +65,15 @@ let rec string_of_value = function
    update : (store * (address * value)) -> store
 *) 
 let update(env, (x, v)) = fun y -> if x = y then v else env y
+let update_list(env, ls) =
+  let update_c env item = update(env,item) in
+    List.fold_left update_c env ls
+let rec unify_pattern p v = match (p,v) with
+  | (Ast.PUnit, UNIT)                 -> []
+  | (Ast.PVar(x), v)                  -> [(x, v)]
+  | (Ast.PPair(p1, p2), PAIR(v1, v2)) -> (unify_pattern p1 v1) @ (unify_pattern p2 v2)
+  | _                             -> complain ("malformed pattern: " ^ (Ast.string_of_pattern p) ^ "\nor malformed value: " ^ (string_of_value v))
+  
 
 let readint () = let _ = print_string "input> " in read_int() 
 
@@ -155,7 +164,7 @@ let rec interpret (e, env, store) =
        | INR v' -> interpret(e2, update(env, (x2, v')), store')
        | v -> complain "runtime error.  Expecting inl or inr!"
        )
-    | Lambda(x, e)     -> (FUN (fun (v, s) -> interpret(e, update(env, (x, v)), s)), store)
+    | Lambda(p, e)     -> (FUN (fun (v, s) -> interpret(e, update_list(env, unify_pattern p v), s)), store)
     | App(e1, e2)      -> let (v2, store1) = interpret(e2, env, store) in 
                           let (v1, store2) =  interpret(e1, env, store1) in 
                            (match v1 with 

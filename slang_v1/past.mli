@@ -14,6 +14,11 @@ type type_expr =
    | TEproduct of type_expr * type_expr
    | TEunion of type_expr * type_expr
 
+type pattern =
+  | PUnit
+  | PVar of var * type_expr
+  | PPair of pattern * pattern
+
 type oper = ADD | MUL | SUB | LT | AND | OR | EQ | EQB | EQI
 
 type unary_oper = NEG | NOT 
@@ -40,20 +45,23 @@ type expr =
        | Deref of loc * expr 
        | Assign of loc * expr * expr
 
-       | Lambda of loc * lambda 
+       | Lambda of loc * plambda 
        | App of loc * expr * expr 
        | Let of loc * var * type_expr * expr * expr
        | LetFun of loc * var * lambda * type_expr * expr
        | LetRecFun of loc * var * lambda * type_expr * expr
 
 and lambda = var * type_expr * expr 
+and plambda = pattern * expr
 val loc_of_expr : expr -> loc 
 val string_of_loc : loc -> string 
+val type_of_pattern : pattern -> type_expr 
 
 (* printing *) 
 val string_of_unary_oper : unary_oper -> string 
 val string_of_oper : oper -> string 
 val string_of_type : type_expr -> string 
+val string_of_pattern : pattern -> string
 val string_of_expr : expr -> string 
 val print_expr : expr -> unit 
 val eprint_expr : expr -> unit

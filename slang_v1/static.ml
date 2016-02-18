@@ -44,7 +44,7 @@ let rec match_types (t1, t2) = (t1 = t2)
 let make_pair loc (e1, t1) (e2, t2)  = (Pair(loc, e1, e2), TEproduct(t1, t2))
 let make_inl loc t2 (e, t1)          = (Inl(loc, t2, e), TEunion(t1, t2))
 let make_inr loc t1 (e, t2)          = (Inr(loc, t1, e), TEunion(t1, t2))
-let make_lambda loc x t1 (e, t2)     = (Lambda(loc, (x, t1, e)), TEarrow(t1, t2))
+let make_lambda loc p t1 (e, t2)     = (Lambda(loc, (p, e)), TEarrow(t1, t2))
 let make_ref loc (e, t)              = (Ref(loc, e), TEref t)
 let make_letfun loc f x t1 (body, t2) (e, t)    = (LetFun(loc, f, (x, t1, body), t2, e), t)
 let make_letrecfun loc f x t1 (body, t2) (e, t) = (LetRecFun(loc, f, (x, t1, body), t2, e), t)
@@ -143,6 +143,10 @@ let make_case loc left right x1 x2 (e1, t1) (e2, t2) (e3, t3) =
       else report_types_not_equal loc left left' 
     | t -> report_expecting e1 "disjoint union" t
 
+let rec expand_pattern = function
+  | PUnit         -> []
+  | PVar(v, t)    -> [(v,t)]
+  | PPair(p1, p2) -> (expand_pattern p1) @ (expand_pattern p2)
 
 let rec  infer env e = 
     match e with 
@@ -166,7 +170,10 @@ let rec  infer env e =
     | Inr (loc, t, e)      -> make_inr loc t (infer env e) 
     | Case(loc, e, (x1, t1, e1), (x2, t2, e2)) ->  
             make_case loc t1 t2 x1 x2 (infer env e) (infer ((x1, t1) :: env) e1) (infer ((x2, t2) :: env) e2)
-    | Lambda (loc, (x, t, e)) -> make_lambda loc x t (infer ((x, t) :: env) e)
+    | Lambda (loc, (p, e)) ->
+      let vars = expand_pattern p in
+      let t = type_of_pattern p in
+        make_lambda loc p t (infer (vars @ env) e)
     | App(loc, e1, e2)        -> make_app loc (infer env e1) (infer env e2)
     | Let(loc, x, t, e1, e2)  -> make_let loc x t (infer env e1) (infer ((x, t) :: env) e2) 
     | LetFun(loc, f, (x, t1, body), t2, e) -> 

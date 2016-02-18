@@ -27,6 +27,10 @@ let translate_bop = function
   | Past.EQB -> Ast.EQB
   | Past.EQ  -> Errors.complain "internal error, translate found a EQ that should have been resolved to EQI or EQB"
 
+let rec translate_pattern = function
+  | Past.PUnit        -> Ast.PUnit
+  | Past.PVar(v,_)    -> Ast.PVar(v)
+  | Past.PPair(p1,p2) -> Ast.PPair(translate_pattern p1, translate_pattern p2)
 
 let rec translate_expr = function 
     | Past.Unit _            -> Ast.Unit
@@ -44,14 +48,14 @@ let rec translate_expr = function
     | Past.Inr(_, _, e)       -> Ast.Inr(translate_expr e)
     | Past.Case(_, e, l1, l2) -> 
          Ast.Case(translate_expr e, translate_lambda l1, translate_lambda l2) 
-    | Past.Lambda(_, l)      -> Ast.Lambda (translate_lambda l)
+    | Past.Lambda(_, l)      -> Ast.Lambda (translate_plambda l)
     | Past.App(_, e1, e2)    -> Ast.App(translate_expr e1, translate_expr e2)
     (*
        Replace "let" with abstraction and application. For example, translate 
         "let x = e1 in e2 end" to "(fun x -> e2) e1" 
     *) 
     | Past.Let(_, x, _, e1, e2) -> 
-         Ast.App(Ast.Lambda(x, translate_expr e2), translate_expr e1)
+         Ast.App(Ast.Lambda(Ast.PVar x, translate_expr e2), translate_expr e1)
     | Past.LetFun(_, f, l, _, e)     -> 
          Ast.LetFun(f, translate_lambda l, translate_expr e)
     | Past.LetRecFun(_, f, l, _, e)     -> 
@@ -64,4 +68,4 @@ let rec translate_expr = function
     | Past.Assign(_, e1, e2) -> Ast.Assign(translate_expr e1, translate_expr e2)
 
 and translate_lambda (x, _, body) = (x, translate_expr body) 
-
+and translate_plambda (p, body) = (translate_pattern p, translate_expr body)
