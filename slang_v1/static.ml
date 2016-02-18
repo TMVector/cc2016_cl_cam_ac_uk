@@ -46,8 +46,8 @@ let make_inl loc t2 (e, t1)          = (Inl(loc, t2, e), TEunion(t1, t2))
 let make_inr loc t1 (e, t2)          = (Inr(loc, t1, e), TEunion(t1, t2))
 let make_lambda loc p t1 (e, t2)     = (Lambda(loc, (p, e)), TEarrow(t1, t2))
 let make_ref loc (e, t)              = (Ref(loc, e), TEref t)
-let make_letfun loc f x t1 (body, t2) (e, t)    = (LetFun(loc, f, (x, t1, body), t2, e), t)
-let make_letrecfun loc f x t1 (body, t2) (e, t) = (LetRecFun(loc, f, (x, t1, body), t2, e), t)
+let make_letfun loc f p (body, t2) (e, t)    = (LetFun(loc, f, (p, body), t2, e), t)
+let make_letrecfun loc f p (body, t2) (e, t) = (LetRecFun(loc, f, (p, body), t2, e), t)
 
 let make_let loc x t (e1, t1) (e2, t2)  = 
     if match_types (t, t1) 
@@ -176,13 +176,14 @@ let rec  infer env e =
         make_lambda loc p t (infer (vars @ env) e)
     | App(loc, e1, e2)        -> make_app loc (infer env e1) (infer env e2)
     | Let(loc, x, t, e1, e2)  -> make_let loc x t (infer env e1) (infer ((x, t) :: env) e2) 
-    | LetFun(loc, f, (x, t1, body), t2, e) -> 
+    | LetFun(loc, f, (patt, body), t2, e) -> 
+      let t1 = type_of_pattern patt in
       let env1 = (f, TEarrow(t1, t2)) :: env in 
       let p = infer env1 e  in 
-      let env2 = (x, t1) :: env in 
-         (try make_letfun loc f x t1 (infer env2 body) p 
+      let env2 = (expand_pattern patt) @ env in 
+         (try make_letfun loc f patt (infer env2 body) p 
           with _ -> let env3 = (f, TEarrow(t1, t2)) :: env2 in 
-                        make_letrecfun loc f x t1 (infer env3 body) p 
+                        make_letrecfun loc f patt (infer env3 body) p 
          )
     | LetRecFun(_, _, _, _, _)  -> internal_error "LetRecFun found in parsed AST" 
 

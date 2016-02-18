@@ -171,12 +171,12 @@ let rec interpret (e, env, store) =
                            | FUN f -> f (v2, store2)
                            | v -> complain "runtime error.  Expecting a function!"
                           )
-    | LetFun(f, (x, body), e) -> 
-       let new_env = update(env, (f, FUN (fun (v, s) -> interpret(body, update(env, (x, v)), s))))
+    | LetFun(f, (p, body), e) -> 
+       let new_env = update(env, (f, FUN (fun (v, s) -> interpret(body, update_list(env, unify_pattern p v), s))))
        in interpret(e, new_env, store) 
-    | LetRecFun(f, (x, body), e) -> 
+    | LetRecFun(f, (p, body), e) -> 
        let rec new_env g = (* a recursive environment! *) 
-           if g = f then FUN (fun (v, s) -> interpret(body, update(new_env, (x, v)), s)) else env g
+           if g = f then FUN (fun (v, s) -> interpret(body, update_list(new_env, unify_pattern p v), s)) else env g
        in interpret(e, new_env, store) 
 
 (* env_empty : env *) 

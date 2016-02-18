@@ -31,8 +31,8 @@ type expr =
        | Assign of expr * expr 
        | Lambda of plambda 
        | App of expr * expr
-       | LetFun of var * lambda * expr
-       | LetRecFun of var * lambda * expr
+       | LetFun of var * plambda * expr
+       | LetRecFun of var * plambda * expr
 
 and lambda = var * expr
 and plambda = pattern * expr
@@ -105,12 +105,12 @@ let rec pp_expr ppf = function
     | Ref e            -> fprintf ppf "ref(%a)" pp_expr e 
     | Deref e          -> fprintf ppf "!(%a)" pp_expr e 
     | Assign (e1, e2)  -> fprintf ppf "(%a := %a)" pp_expr e1 pp_expr e2 
-    | LetFun(f, (x, e1), e2)     -> 
+    | LetFun(f, (p, e1), e2)     -> 
          fprintf ppf "@[let %a(%a) =@ %a @ in %a @ end@]" 
-                     fstring f fstring x  pp_expr e1 pp_expr e2
-    | LetRecFun(f, (x, e1), e2)  -> 
+                     fstring f pp_pattern p pp_expr e1 pp_expr e2
+    | LetRecFun(f, (p, e1), e2)  -> 
          fprintf ppf "@[letrec %a(%a) =@ %a @ in %a @ end@]" 
-                     fstring f fstring x  pp_expr e1 pp_expr e2
+                     fstring f pp_pattern p pp_expr e1 pp_expr e2
 and pp_expr_list ppf = function 
   | [] -> () 
   | [e] -> pp_expr ppf e 
@@ -176,10 +176,10 @@ let rec string_of_expr = function
     | Ref e            -> mk_con "Ref" [string_of_expr e] 
     | Deref e          -> mk_con "Deref" [string_of_expr e] 
     | Assign (e1, e2)  -> mk_con "Assign" [string_of_expr e1; string_of_expr e2]
-    | LetFun(f, (x, e1), e2)      -> 
-          mk_con "LetFun" [f; mk_con "" [x; string_of_expr e1]; string_of_expr e2]
-    | LetRecFun(f, (x, e1), e2)   -> 
-          mk_con "LetRecFun" [f; mk_con "" [x; string_of_expr e1]; string_of_expr e2]
+    | LetFun(f, (p, e1), e2)      -> 
+          mk_con "LetFun" [f; mk_con "" [string_of_pattern p; string_of_expr e1]; string_of_expr e2]
+    | LetRecFun(f, (p, e1), e2)   -> 
+          mk_con "LetRecFun" [f; mk_con "" [string_of_pattern p; string_of_expr e1]; string_of_expr e2]
     | Case(e, (x1, e1), (x2, e2)) -> 
           mk_con "Case" [
               string_of_expr e; 

@@ -48,8 +48,8 @@ type expr =
        | Lambda of loc * plambda 
        | App of loc * expr * expr 
        | Let of loc * var * type_expr * expr * expr
-       | LetFun of loc * var * lambda * type_expr * expr
-       | LetRecFun of loc * var * lambda * type_expr * expr
+       | LetFun of loc * var * plambda * type_expr * expr
+       | LetRecFun of loc * var * plambda * type_expr * expr
 
 and lambda = var * type_expr * expr 
 and plambda = pattern * expr

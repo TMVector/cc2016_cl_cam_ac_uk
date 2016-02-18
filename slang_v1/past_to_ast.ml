@@ -57,9 +57,9 @@ let rec translate_expr = function
     | Past.Let(_, x, _, e1, e2) -> 
          Ast.App(Ast.Lambda(Ast.PVar x, translate_expr e2), translate_expr e1)
     | Past.LetFun(_, f, l, _, e)     -> 
-         Ast.LetFun(f, translate_lambda l, translate_expr e)
+         Ast.LetFun(f, translate_plambda l, translate_expr e)
     | Past.LetRecFun(_, f, l, _, e)     -> 
-         Ast.LetRecFun(f, translate_lambda l, translate_expr e)
+         Ast.LetRecFun(f, translate_plambda l, translate_expr e)
 
     | Past.Seq(_, el) -> Ast.Seq(List.map translate_expr el)
     | Past.While(_, e1, e2) -> Ast.While(translate_expr e1, translate_expr e2)

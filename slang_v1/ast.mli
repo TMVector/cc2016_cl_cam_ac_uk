@@ -33,8 +33,8 @@ type expr =
 
        | Lambda of plambda 
        | App of expr * expr
-       | LetFun of var * lambda * expr
-       | LetRecFun of var * lambda * expr
+       | LetFun of var * plambda * expr
+       | LetRecFun of var * plambda * expr
 
 and lambda = Past.var * expr 
 and plambda = pattern * expr

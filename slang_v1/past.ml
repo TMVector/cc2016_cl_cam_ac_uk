@@ -52,8 +52,8 @@ type expr =
        | Lambda of loc * plambda 
        | App of loc * expr * expr
        | Let of loc * var * type_expr * expr * expr
-       | LetFun of loc * var * lambda * type_expr * expr
-       | LetRecFun of loc * var * lambda * type_expr * expr
+       | LetFun of loc * var * plambda * type_expr * expr
+       | LetRecFun of loc * var * plambda * type_expr * expr
 
 and lambda = var * type_expr * expr
 and plambda = pattern * expr
@@ -173,12 +173,12 @@ let rec pp_expr ppf = function
     | App(_, e1, e2)      -> fprintf ppf "%a %a" pp_expr e1 pp_expr e2
     | Let(_, x, t, e1, e2) -> 
          fprintf ppf "@[<2>let %a : %a = %a in %a end@]" fstring x pp_type t pp_expr e1 pp_expr e2
-    | LetFun(_, f, (x, t1, e1), t2, e2)     -> 
-         fprintf ppf "@[let %a(%a : %a) : %a =@ %a @ in %a @ end@]" 
-                     fstring f fstring x  pp_type t1 pp_type t2 pp_expr e1 pp_expr e2
-    | LetRecFun(_, f, (x, t1, e1), t2, e2)     -> 
-         fprintf ppf "@[letrec %a(%a : %a) : %a =@ %a @ in %a @ end@]" 
-                     fstring f fstring x  pp_type t1 pp_type t2 pp_expr e1 pp_expr e2
+    | LetFun(_, f, (p, e1), t2, e2)     -> 
+         fprintf ppf "@[let %a(%a) : %a =@ %a @ in %a @ end@]" 
+                     fstring f pp_pattern p pp_type t2 pp_expr e1 pp_expr e2
+    | LetRecFun(_, f, (p, e1), t2, e2)     -> 
+         fprintf ppf "@[letrec %a(%a) : %a =@ %a @ in %a @ end@]" 
+                     fstring f pp_pattern p pp_type t2 pp_expr e1 pp_expr e2
 
 let print_expr e = 
     let _ = pp_expr std_formatter e
@@ -249,16 +249,16 @@ let rec string_of_expr = function
     | Lambda(_, (p, e)) -> mk_con "Lambda" [string_of_pattern p; string_of_expr e]
     | App(_, e1, e2)      -> mk_con "App" [string_of_expr e1; string_of_expr e2]
     | Let(_, x, t, e1, e2) -> mk_con "Let" [x; string_of_type t; string_of_expr e1; string_of_expr e2]
-    | LetFun(_, f, (x, t1, e1), t2, e2)      -> 
+    | LetFun(_, f, (p, e1), t2, e2)      -> 
           mk_con "LetFun" [
              f; 
-             mk_con "" [x; string_of_type t1; string_of_expr e1]; 
+             mk_con "" [string_of_pattern p; string_of_expr e1]; 
              string_of_type t2; 
              string_of_expr e2]
-    | LetRecFun(_, f, (x, t1, e1), t2, e2)   -> 
+    | LetRecFun(_, f, (p, e1), t2, e2)   -> 
           mk_con "LetRecFun" [
              f; 
-             mk_con "" [x; string_of_type t1; string_of_expr e1]; 
+             mk_con "" [string_of_pattern p; string_of_expr e1]; 
              string_of_type t2; 
              string_of_expr e2]
     | Case(_, e, (x1, t1, e1), (x2, t2, e2)) -> 
