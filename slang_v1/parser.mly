@@ -87,9 +87,8 @@ expr:
 | LET IDENT tlfunpattern COLON texpr EQUAL expr IN expr 
                                      { Past.LetFun (get_loc(), $2, ($3, $7), $5, $9) }
 | CASE expr OF 
-      INL LPAREN IDENT COLON texpr RPAREN ARROW expr 
-  BAR INR LPAREN IDENT COLON texpr RPAREN  ARROW expr 
-  END 
+      INL LPAREN IDENT COLON texpr RPAREN ARROW expr
+  BAR INR LPAREN IDENT COLON texpr RPAREN ARROW expr
                                      { Past.Case (get_loc(), $2, ($6, $8, $11), ($15, $17, $20)) }
 
 exprlist:
