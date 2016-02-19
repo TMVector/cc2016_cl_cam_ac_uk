@@ -132,13 +132,13 @@ let make_assign loc (e1, t1) (e2, t2) =
                  else report_type_mismatch (e1, t) (e2, t2)
     | t -> report_expecting e1 "ref type" t 
 
-let make_case loc left right x1 x2 (e1, t1) (e2, t2) (e3, t3) = 
+let make_case loc left right p1 p2 (e1, t1) (e2, t2) (e3, t3) = 
     match t1 with 
     | TEunion(left', right') -> 
       if match_types(left, left') 
       then if match_types(right, right')
            then if match_types(t3, t2)
-                then (Case(loc, e1, (x1, left, e2), (x2, right, e3)), t2)
+                then (Case(loc, e1, (p1, e2), (p2, e3)), t2)
                 else report_type_mismatch (e2, t2) (e3, t3)
            else report_types_not_equal loc right right'
       else report_types_not_equal loc left left' 
@@ -169,8 +169,12 @@ let rec  infer env e =
     | Snd (loc, e)         -> make_snd loc (infer env e)
     | Inl (loc, t, e)      -> make_inl loc t (infer env e)
     | Inr (loc, t, e)      -> make_inr loc t (infer env e) 
-    | Case(loc, e, (x1, t1, e1), (x2, t2, e2)) ->  
-            make_case loc t1 t2 x1 x2 (infer env e) (infer ((x1, t1) :: env) e1) (infer ((x2, t2) :: env) e2)
+    | Case(loc, e, (p1, e1), (p2, e2)) ->
+      let t1 = type_of_pattern p1 in
+      let t2 = type_of_pattern p2 in
+      let vars1 = expand_pattern p1 in
+      let vars2 = expand_pattern p2 in
+        make_case loc t1 t2 p1 p2 (infer env e) (infer (vars1 @ env) e1) (infer (vars2 @ env) e2)
     | Lambda (loc, (p, e)) ->
       let vars = expand_pattern p in
       let t = type_of_pattern p in

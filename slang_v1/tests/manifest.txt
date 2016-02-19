@@ -47,3 +47,4 @@ lambda_pattern1 101
 lambda_pattern2 101
 alpha_pattern 78
 let_pattern 101
+case_pattern 3

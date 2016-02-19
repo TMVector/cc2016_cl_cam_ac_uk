@@ -23,7 +23,7 @@ type expr =
        | Snd of expr 
        | Inl of expr 
        | Inr of expr 
-       | Case of expr * lambda * lambda 
+       | Case of expr * plambda * plambda 
 
        | While of expr * expr 
        | Seq of (expr list)

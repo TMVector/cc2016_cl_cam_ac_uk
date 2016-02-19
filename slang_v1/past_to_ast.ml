@@ -47,7 +47,7 @@ let rec translate_expr = function
     | Past.Inl(_, _, e)       -> Ast.Inl(translate_expr e)
     | Past.Inr(_, _, e)       -> Ast.Inr(translate_expr e)
     | Past.Case(_, e, l1, l2) -> 
-         Ast.Case(translate_expr e, translate_lambda l1, translate_lambda l2) 
+         Ast.Case(translate_expr e, translate_plambda l1, translate_plambda l2) 
     | Past.Lambda(_, l)      -> Ast.Lambda (translate_plambda l)
     | Past.App(_, e1, e2)    -> Ast.App(translate_expr e1, translate_expr e2)
     (*

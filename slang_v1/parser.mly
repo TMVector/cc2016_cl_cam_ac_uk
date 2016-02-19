@@ -87,16 +87,18 @@ expr:
 | LET IDENT tlfunpattern COLON texpr EQUAL expr IN expr 
                                      { Past.LetFun (get_loc(), $2, ($3, $7), $5, $9) }
 | CASE expr OF 
-      INL LPAREN IDENT COLON texpr RPAREN ARROW expr
-  BAR INR LPAREN IDENT COLON texpr RPAREN ARROW expr
-                                     { Past.Case (get_loc(), $2, ($6, $8, $11), ($15, $17, $20)) }
+      INL parenpattern ARROW expr
+  BAR INR parenpattern ARROW expr
+                                     { Past.Case (get_loc(), $2, ($5, $7), ($10, $12)) }
 
 exprlist:
 |   expr                             { [$1] }
 |   expr  SEMICOLON exprlist         { $1 :: $3  }
 
 tlfunpattern:
-| UNIT                      { Past.PUnit } /* Only allow unit as the top level pattern, not as a child */
+| UNIT          { Past.PUnit } /* Only allow unit as the top level pattern, not as a child */
+| parenpattern  { $1 }
+parenpattern:
 | pairpattern               { $1 }
 | LPAREN valpattern RPAREN  { $2 }
 valpattern:

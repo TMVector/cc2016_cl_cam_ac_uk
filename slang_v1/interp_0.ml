@@ -157,11 +157,11 @@ let rec interpret (e, env, store) =
                           )
     | Inl e            -> let (v, store') = interpret(e, env, store) in (INL v, store') 
     | Inr e            -> let (v, store') = interpret(e, env, store) in (INR v, store') 
-    | Case(e, (x1, e1), (x2, e2)) -> 
+    | Case(e, (p1, e1), (p2, e2)) -> 
       let (v, store') = interpret(e, env, store) in 
        (match v with 
-       | INL v' -> interpret(e1, update(env, (x1, v')), store') 
-       | INR v' -> interpret(e2, update(env, (x2, v')), store')
+       | INL v' -> interpret(e1, update_list(env, unify_pattern p1 v'), store')
+       | INR v' -> interpret(e2, update_list(env, unify_pattern p2 v'), store')
        | v -> complain "runtime error.  Expecting inl or inr!"
        )
     | Lambda(p, e)     -> (FUN (fun (v, s) -> interpret(e, update_list(env, unify_pattern p v), s)), store)

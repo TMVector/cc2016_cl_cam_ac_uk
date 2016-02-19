@@ -37,7 +37,7 @@ type expr =
        | Snd of loc * expr 
        | Inl of loc * type_expr * expr 
        | Inr of loc * type_expr * expr 
-       | Case of loc * expr * lambda * lambda 
+       | Case of loc * expr * plambda * plambda 
 
        | While of loc * expr * expr 
        | Seq of loc * (expr list)

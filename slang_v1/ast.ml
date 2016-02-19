@@ -23,7 +23,7 @@ type expr =
        | Snd of expr 
        | Inl of expr 
        | Inr of expr 
-       | Case of expr * lambda * lambda 
+       | Case of expr * plambda * plambda 
        | While of expr * expr 
        | Seq of (expr list)
        | Ref of expr 
@@ -93,9 +93,9 @@ let rec pp_expr ppf = function
     | Snd e            -> fprintf ppf "snd(%a)" pp_expr e
     | Inl e            -> fprintf ppf "inl(%a)" pp_expr e
     | Inr e            -> fprintf ppf "inr(%a)" pp_expr e
-    | Case(e, (x1, e1), (x2, e2)) -> 
+    | Case(e, (p1, e1), (p2, e2)) -> 
         fprintf ppf "@[<2>case %a of@ | inl %a -> %a @ | inr %a -> %a end@]" 
-                     pp_expr e fstring x1 pp_expr e1 fstring x2 pp_expr e2 
+                     pp_expr e pp_pattern p1 pp_expr e1 pp_pattern p2 pp_expr e2 
     | Lambda(p, e) -> 
          fprintf ppf "(fun %a -> %a)" pp_pattern p pp_expr e
     | App(e1, e2)      -> fprintf ppf "%a %a" pp_expr e1 pp_expr e2
@@ -180,11 +180,11 @@ let rec string_of_expr = function
           mk_con "LetFun" [f; mk_con "" [string_of_pattern p; string_of_expr e1]; string_of_expr e2]
     | LetRecFun(f, (p, e1), e2)   -> 
           mk_con "LetRecFun" [f; mk_con "" [string_of_pattern p; string_of_expr e1]; string_of_expr e2]
-    | Case(e, (x1, e1), (x2, e2)) -> 
+    | Case(e, (p1, e1), (p2, e2)) -> 
           mk_con "Case" [
               string_of_expr e; 
-	      mk_con "" [x1; string_of_expr e1]; 
-	      mk_con "" [x2; string_of_expr e2]]
+              mk_con "" [string_of_pattern p1; string_of_expr e1]; 
+              mk_con "" [string_of_pattern p2; string_of_expr e2]]
 
 and string_of_expr_list = function 
   | [] -> "" 

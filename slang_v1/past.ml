@@ -41,7 +41,7 @@ type expr =
        | Snd of loc * expr 
        | Inl of loc * type_expr * expr 
        | Inr of loc * type_expr * expr 
-       | Case of loc * expr * lambda * lambda 
+       | Case of loc * expr * plambda * plambda 
 
        | While of loc * expr * expr 
        | Seq of loc * (expr list)
@@ -157,9 +157,9 @@ let rec pp_expr ppf = function
     | Snd(_, e)           -> fprintf ppf "snd %a" pp_expr e
     | Inl(_, t, e)        -> fprintf ppf "(inl %a %a)" pp_type t pp_expr e
     | Inr(_, t, e)        -> fprintf ppf "(inr %a %a)" pp_type t pp_expr e
-    | Case(_, e, (x1, t1, e1), (x2, t2, e2)) -> 
-        fprintf ppf "@[<2>case %a of@ | inl(%a : %a) -> %a @ | inr(%a : %a) -> %a end@]" 
-                     pp_expr e fstring x1 pp_type t1 pp_expr e1 fstring x2 pp_type t2 pp_expr e2 
+    | Case(_, e, (p1, e1), (p2, e2)) -> 
+        fprintf ppf "@[<2>case %a of@ | inl(%a) -> %a @ | inr(%a) -> %a end@]" 
+                     pp_expr e pp_pattern p1 pp_expr e1 pp_pattern p2 pp_expr e2 
 
     | Seq (_, [])         -> () 
     | Seq (_, [e])        -> pp_expr ppf e 
@@ -261,11 +261,11 @@ let rec string_of_expr = function
              mk_con "" [string_of_pattern p; string_of_expr e1]; 
              string_of_type t2; 
              string_of_expr e2]
-    | Case(_, e, (x1, t1, e1), (x2, t2, e2)) -> 
+    | Case(_, e, (p1, e1), (p2, e2)) -> 
           mk_con "Case" [
 	     string_of_expr e; 
-	     mk_con "" [x1; string_of_type t1; string_of_expr e1]; 
-	     mk_con "" [x2; string_of_type t1; string_of_expr e2]]
+	     mk_con "" [string_of_pattern p1; string_of_expr e1]; 
+	     mk_con "" [string_of_pattern p2; string_of_expr e2]]
 
 and string_of_expr_list = function 
   | [] -> "" 
