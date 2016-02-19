@@ -5,9 +5,7 @@ let h(p : int * int) : int  =
     then snd p  
     else if m = 1
          then snd p 
-         else fib (m - 1) + fib (m -2) 
-         end 
-    end 
+         else fib (m - 1) + fib (m -2)
    in 
       fib(fst p) 
    end 
