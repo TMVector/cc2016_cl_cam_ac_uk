@@ -14,11 +14,14 @@ let get_loc = Parsing.symbol_start_pos
 %token WHAT UNIT AND TRUE FALSE IF FI THEN ELSE LET REC IN BEGIN END BOOL INTTYPE UNITTYPE 
 %token ARROW BAR INL INR FST SND FUN NUF CASE OF REF ASSIGN BANG WHILE DO OD 
 
-%nonassoc DO
-%nonassoc THEN
-%nonassoc ELSE
-%left ADD SUB                     /* lowest precedence */
-%left MUL ANDOP OROP EQUAL ARROW  LT /* medium precedence */
+/* Each line has higher precedence than the one preceeding it */
+%nonassoc DO THEN ELSE IN
+%left ARROW
+%left LT
+%left ADD SUB                     
+%left MUL
+%left ANDOP OROP
+%left EQUAL
 %left ASSIGN
 %nonassoc UMINUS                  
 /* Finally, the first tokens of simple_expr are above everything else. */
@@ -79,10 +82,9 @@ expr:
 | SND expr %prec UMINUS              { Past.Snd(get_loc(), $2) }
 | INL texpr expr %prec UMINUS        { Past.Inl(get_loc(), $2, $3) }
 | INR texpr expr %prec UMINUS        { Past.Inr(get_loc(), $2, $3) }
-| FUN tlfunpattern ARROW expr END 
-                                     { Past.Lambda(get_loc(), ($2, $4)) } 
-| LET valpattern EQUAL expr IN expr END           { Past.Let (get_loc(), $2, $4, $6) }
-| LET IDENT tlfunpattern COLON texpr EQUAL expr IN expr END 
+| FUN tlfunpattern ARROW expr        { Past.Lambda(get_loc(), ($2, $4)) } 
+| LET valpattern EQUAL expr IN expr  { Past.Let (get_loc(), $2, $4, $6) }
+| LET IDENT tlfunpattern COLON texpr EQUAL expr IN expr 
                                      { Past.LetFun (get_loc(), $2, ($3, $7), $5, $9) }
 | CASE expr OF 
       INL LPAREN IDENT COLON texpr RPAREN ARROW expr 

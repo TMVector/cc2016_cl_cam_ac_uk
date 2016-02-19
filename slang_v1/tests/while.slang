@@ -6,4 +6,3 @@ in
       i := (!i + 1);
     !i
   end
-end

@@ -8,7 +8,5 @@ in let y : int ref = ref 0
         y := 1; 
         x := 100; 
         !x + !y
-      end   
-   end 
-end 
+      end
 

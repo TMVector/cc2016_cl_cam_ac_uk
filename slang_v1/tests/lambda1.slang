@@ -1,4 +1,4 @@
 
-(fun (x : int) -> x end) (99 + 2) 
+(fun (x : int) -> x) (99 + 2) 
 
 

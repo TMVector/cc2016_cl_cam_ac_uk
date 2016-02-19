@@ -5,5 +5,4 @@ let fib( m : int) : int =
          then 1 
          else fib (m - 1) + fib (m -2)
 in 
-    fib(2) 
-end 
+    fib(2)

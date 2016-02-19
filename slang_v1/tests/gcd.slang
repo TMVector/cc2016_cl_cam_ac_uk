@@ -7,10 +7,6 @@ let gcd(p : int * int) : int =
           else if m < n 
                then gcd(m, n - m)
                else gcd(m - n, n)
-       end 
-     end 
 in 
    let x : int = 10 in 
-      let  y : int = 2 in gcd(x, y) end 
-    end 
-end 
+      let  y : int = 2 in gcd(x, y)
