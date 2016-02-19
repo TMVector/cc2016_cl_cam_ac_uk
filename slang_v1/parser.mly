@@ -27,6 +27,9 @@ let get_loc = Parsing.symbol_start_pos
                    
 %start start
 %type <Past.type_expr> texpr
+%type <Past.pattern> tlfunpattern
+%type <Past.pattern> valpattern
+%type <Past.pattern> pairpattern
 %type <Past.expr> simple_expr 
 %type <Past.expr> expr 
 %type <Past.expr list> exprlist
@@ -97,11 +100,9 @@ tlfunpattern:
 | pairpattern               { $1 }
 | LPAREN valpattern RPAREN  { $2 }
 valpattern:
-| varpattern                { $1 }
+| IDENT COLON texpr         { Past.PVar($1, $3) }
 | pairpattern               { $1 }
 | LPAREN valpattern RPAREN  { $2 }
-varpattern:
-| IDENT COLON texpr                         { Past.PVar($1, $3) }
 pairpattern:
 | LPAREN valpattern COMMA valpattern RPAREN { Past.PPair($2, $4) }
 
