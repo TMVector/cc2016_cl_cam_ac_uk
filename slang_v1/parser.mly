@@ -14,6 +14,7 @@ let get_loc = Parsing.symbol_start_pos
 %token WHAT UNIT AND TRUE FALSE IF FI THEN ELSE LET REC IN BEGIN END BOOL INTTYPE UNITTYPE 
 %token ARROW BAR INL INR FST SND FUN NUF CASE OF REF ASSIGN BANG WHILE DO OD 
 
+%nonassoc DO
 %nonassoc THEN
 %nonassoc ELSE
 %left ADD SUB                     /* lowest precedence */
@@ -73,7 +74,7 @@ expr:
 | expr ASSIGN expr                   { Past.Assign(get_loc(), $1, $3) }
 | BEGIN exprlist END                 { Past.Seq(get_loc(), $2) }
 | IF expr THEN expr ELSE expr        { Past.If(get_loc(), $2, $4, $6) }
-| WHILE expr DO expr END              { Past.While(get_loc(), $2, $4) }
+| WHILE expr DO expr                 { Past.While(get_loc(), $2, $4) }
 | FST expr %prec UMINUS              { Past.Fst(get_loc(), $2) }
 | SND expr %prec UMINUS              { Past.Snd(get_loc(), $2) }
 | INL texpr expr %prec UMINUS        { Past.Inl(get_loc(), $2, $3) }
